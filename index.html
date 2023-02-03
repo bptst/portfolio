@@ -15,7 +15,7 @@
   <video
   id='video'
   muted
-  loop autoplay src="https://github.com/bptst/portfolio/raw/main/assets/Movie_d%C3%A9mo_AdobeExpress.mp4"
+  loop autoplay src=""
   style='display:none;'
   ></video>
 
@@ -215,6 +215,7 @@ renderer.setPixelRatio(window.devicePixelRatio);
   })
 
   const video = document.getElementById( 'video' );
+  video.src="assets/Movie_démo_AdobeExpress.mp4"
   const video_texture = new THREE.VideoTexture( video );
 
   const geometry_screen = new THREE.PlaneGeometry( 1, 1 );
