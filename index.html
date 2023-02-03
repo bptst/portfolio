@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Bibliothéque three.js</title>
+  <style>
+    body{margin:0px;}
+    canvas{width:100%; height:100%;}
+
+  </style>
+</head>
+
+<body>
+
+  <video
+  id='video'
+  muted
+  loop autoplay src="./assets/Movie_démo_AdobeExpress.mp4"
+  style='display:none;'
+  ></video>
+
+
+  <div class='resetcam' id='resetcam'>
+  <svg class="circle" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+
+  <circle cx="50" cy="50" r="50"/>
+
+</div>
+<div class='lightswitch' id='lightswitch'>
+<svg class="circlelight" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+
+<circle cx="50" cy="50" r="50"/>
+
+
+</div>
+
+<style>
+.loaded{
+  animation: fadeleft 3s 1;
+  transition-delay: 5s;
+	opacity: 0;
+	transition-property: opacity;}
+
+
+
+}
+
+@keyframes fadeleft {
+  0%  {
+    transform: translateX(0%) scale(1, 1);
+  }
+	100% {
+		transform: translateX(120%) scale(1, 1);
+	}
+}
+
+
+
+.loader{
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: blue;
+}
+.circlelight{
+
+  fill:#8d91fc;
+}
+.lightswitch{
+  position:absolute;
+  top: 80%;  /* position the top  edge of the element at the middle of the parent */
+    right: 50%;
+  transform: translate(400%,50%);
+
+  width: 80px;
+}
+
+.circle{
+  fill:#8d918c;
+}
+.resetcam{
+  position:absolute;
+  top: 80%;  /* position the top  edge of the element at the middle of the parent */
+    right: 50%;
+  transform: translate(50%,50%);
+
+  width: 80px;
+}
+</style>
+
+</svg>
+
+  <script src='JS/three.js'></script>
+  <script  src='JS/OrbitControls.js'></script>
+  <script  src='JS/FirstPersonControls.js'></script>
+  <script type="module" src='JS/GLTFLoader.js'></script>
+  <script src='JS/TTFLoader.js'></script>
+  <script type="module" src='JS/Stats.js'></script>
+
+
+  <script  type="module" >
+
+  import {GLTFLoader} from './JS/GLTFLoader.js';
+  import {Reflector} from './JS/Reflector.js';
+  import {TextGeometry} from './JS/TextGeometry.js';
+  import Stats from './JS/Stats.js';
+
+const stats = new Stats()
+stats.showPanel(0) // 0: fps, 1: ms, 2: mb, 3+: custom
+document.body.appendChild(stats.dom)
+
+  fontloaderfunction()
+
+  const loadingmanager= new THREE.LoadingManager();
+  loadingmanager.onLoad = function(){
+
+    console.log(' FINITOOO')
+    document.getElementsByClassName("loader")[0].classList.add('loaded')
+  }
+
+
+
+
+  const scene = new THREE.Scene();
+  scene.background= new THREE.Color(0x0e113d);
+
+//FONT
+
+    const fontloader=new THREE.FontLoader();
+
+    fontloader.load(
+      'assets/Cyberfunk_Regular.json',
+      (fontGaebo)=>{
+        const textgeo=new TextGeometry('',{
+          height:0.2,
+          size:1,
+          font:fontGaebo,
+        });
+
+        const textmaterial= new THREE.MeshStandardMaterial({color:0xff0000});
+
+        const textMesh=new THREE.Mesh(textgeo,textmaterial);
+        scene.add(textMesh)
+        textMesh.rotation.y=Math.PI/2
+        textMesh.position.set(-4.5,3,1)
+      });
+
+
+
+
+
+
+//CAMERA RENDER
+  const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+  camera.far=5000
+    camera.position.x = 7;
+    camera.position.y = 2;
+
+const   renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+
+  renderer.setSize( window.innerWidth, window.innerHeight );
+
+  document.body.appendChild( renderer.domElement );
+
+
+
+  //HITBOX
+
+  const geometry = new THREE.BoxGeometry( 1, 1, 1 );
+  const material = new THREE.MeshStandardMaterial( { color: 0xff848b } );
+
+  const cube = new THREE.Mesh( geometry, material );
+  cube.scale.set(0.8,5.5,0.8)
+  cube.position.y=-0.8
+  cube.visible=false
+
+  scene.add( cube );
+
+
+
+  var controls=new THREE.OrbitControls(camera, renderer.domElement);
+  controls.maxPolarAngle=Math.PI/2-0.1
+
+  const mirrorBack1 = new Reflector(
+      new THREE.CircleGeometry( 5, 32 ),
+      {
+          color: new THREE.Color(0x7f7f7f),
+          textureWidth: window.innerWidth * window.devicePixelRatio,
+          textureHeight: window.innerHeight * window.devicePixelRatio
+      }
+  )
+
+
+  mirrorBack1.position.x = 1
+  mirrorBack1.position.y = 1
+  mirrorBack1.position.z = -5.2
+  mirrorBack1.scale.set(0.19,0.34,1)
+
+  scene.add(mirrorBack1)
+
+
+
+  let loader_paper = new THREE.TextureLoader();
+  loader_paper.load("img/dessin_room.png", function(textureplane){
+
+    const paper_geometry = new THREE.PlaneGeometry( 1, 1 );
+    const paper_material = new THREE.MeshLambertMaterial({
+      map: textureplane,
+      side: THREE.DoubleSide} );
+
+    const paper = new THREE.Mesh( paper_geometry, paper_material );
+    scene.add( paper );
+    paper.position.set(1,1,-5.2)
+  })
+
+  const video = document.getElementById( 'video' );
+  const video_texture = new THREE.VideoTexture( video );
+
+  const geometry_screen = new THREE.PlaneGeometry( 1, 1 );
+  const material_screen = new THREE.MeshBasicMaterial( {map:video_texture, side: THREE.DoubleSide,toneMapped:false} );
+  const screen = new THREE.Mesh( geometry_screen, material_screen );
+  screen.position.set(-4.3,1.35,-2.135)
+  screen.rotation.set(0,-29.83,0)
+  screen.scale.set(1.34,0.7,0)
+
+
+  scene.add( screen );
+
+
+
+
+  var pc_mesh = new THREE.Mesh();
+
+  const gtlfLoader = new GLTFLoader(loadingmanager);
+
+
+  gtlfLoader.load("assets/desk_and_pc/scene.gltf", (gtlfscene) => {
+    scene.add(gtlfscene.scene);
+    pc_mesh=gtlfscene.scene
+    gtlfscene.scene.position.set(-4,-1,-2)
+    gtlfscene.scene.scale.set(0.7,0.7,0.7)
+    });
+
+    gtlfLoader.load("assets/three_logo.gltf", (gtlfscene) => {
+      scene.add(gtlfscene.scene);
+      gtlfscene.scene.position.set(-4,-1,-2)
+      gtlfscene.scene.scale.set(0.7,0.7,0.7)
+      });
+
+      var window_wall = new THREE.Mesh();
+      gtlfLoader.load("assets/window/scene.gltf", (gtlfscene) => {
+        scene.add(gtlfscene.scene);
+        window_wall=gtlfscene.scene
+        gtlfscene.scene.scale.set(0.08,0.05,0.05)
+        gtlfscene.scene.position.set(-5.9,1.1,8.5)
+
+        window_wall.rotation.y=Math.PI/2
+
+        });
+
+        var bed = new THREE.Mesh();
+        gtlfLoader.load("assets/bed.gltf", (gtlfscene) => {
+
+          bed=gtlfscene.scene;
+          scene.add(bed);
+
+          bed.scale.set(0.5,0.7,-0.5)
+          bed.position.set(-3,-0.5,2.5)
+
+
+
+
+          });
+        var basil_plant = new THREE.Mesh();
+        gtlfLoader.load("assets/basil_pot_plant/scene.gltf", (gtlfscene) => {
+          scene.add(gtlfscene.scene);
+          basil_plant=gtlfscene.scene
+          basil_plant.scale.set(4,4,4)
+          basil_plant.position.set(-5.2,1,3)
+          basil_plant.rotation.y=-Math.PI/3
+
+
+          });
+        var roof = new THREE.Mesh();
+        gtlfLoader.load("assets/roof/scene.gltf", (gtlfscene) => {
+          scene.add(gtlfscene.scene);
+          roof=gtlfscene.scene
+          roof.position.set(28.5,-15.4,58.7)
+          roof.scale.set(0.4,0.35,0.35)
+
+
+
+
+          });
+
+
+    var tabouret = new THREE.Mesh();
+
+    gtlfLoader.load("assets/tabouret/scene.gltf", (gtlfscene) => {
+      scene.add(gtlfscene.scene);
+      tabouret=gtlfscene.scene
+      gtlfscene.scene.position.set(-2.8,-1,-2)
+      gtlfscene.scene.scale.set(0.7,0.8,0.7)
+      });
+      var perso = new THREE.Mesh();
+
+
+    gtlfLoader.load("assets/miror.gltf", (gtlfscene) => {
+      scene.add(gtlfscene.scene);
+      gtlfscene.scene.position.set(1,1,-5.21)
+      gtlfscene.scene.scale.set(0.7,1,0.7)
+      });
+
+
+  var head_mesh = new THREE.Mesh();
+  var head_parent = new THREE.Mesh();
+  var mixer=new THREE.AnimationMixer();
+  var action;
+
+  var mixer_falling=new THREE.AnimationMixer();
+
+
+
+// Music
+
+// create an AudioListener and add it to the camera
+const listener = new THREE.AudioListener();
+camera.add( listener );
+
+// create a global audio source
+const sound = new THREE.Audio( listener );
+
+// load a sound and set it as the Audio object's buffer
+const audioLoader = new THREE.AudioLoader();
+audioLoader.load( 'assets/Late Night.mp3', function( buffer ) {
+	sound.setBuffer( buffer );
+	sound.setLoop( true );
+	sound.setVolume( 2 );
+  sound.autoplay=true;
+});
+
+
+//RAIN
+var raincount=200
+var rainbuffer= new THREE.BufferGeometry();
+let poseRain= new Float32Array( raincount*3)
+for (let i=0;i<raincount*3;i+=3){
+  poseRain[i]=Math.random()*30-15;
+  poseRain[i+1]=Math.random()*30-15;
+  poseRain[i+2]=Math.random()*30 -15;
+};
+rainbuffer.setAttribute('position',new THREE.BufferAttribute(poseRain, 3 ));
+var rainMaterial= new THREE.PointsMaterial({
+  color:0xaaaaaa,
+  size:0.13,
+  transparent:true
+});
+var rain=new THREE.Points(rainbuffer,rainMaterial)
+scene.add(rain)
+
+
+// CLOUD
+
+
+let loader = new THREE.TextureLoader();
+loader.load("img/cloud.png", function(textureplane){
+
+  var cloudGeo = new THREE.PlaneBufferGeometry(200,200);
+  var cloudMaterial = new THREE.MeshLambertMaterial({
+    map: textureplane,
+    transparent: true
+  });
+
+  for (let q=0; q<10; q++) {
+    let cloud_ground = new THREE.Mesh(cloudGeo,cloudMaterial);
+    cloud_ground.position.set(
+      0,
+      -q/3 -1,
+      0
+    );
+
+    scene.add(cloud_ground)
+    cloud_ground.rotation.x = -Math.PI/2;
+    cloud_ground.scale.set(0.5,0.5,0.5)
+    cloud_ground.rotation.z = Math.random()*360;
+
+
+
+  }
+  for (let q=0; q<10; q++) {
+    let cloud_ground = new THREE.Mesh(cloudGeo,cloudMaterial);
+    cloud_ground.position.set(
+      0,
+      -q/2 +20,
+      0
+    );
+
+    scene.add(cloud_ground)
+    cloud_ground.material.side= THREE.DoubleSide ;
+    cloud_ground.rotation.x = -Math.PI/2;
+    cloud_ground.scale.set(Math.random()*0.5,Math.random()*0.5,Math.random()*0.5)
+    cloud_ground.rotation.z = Math.random()*360;
+
+
+
+  }
+
+  for (let p=0; p<3; p++) {
+    let cloud = new THREE.Mesh(cloudGeo,cloudMaterial);
+    cloud.position.set(
+      Math.random()*80 -100,
+
+      p*2-20,
+      Math.random()*100 - 50
+    );
+    cloud.lookAt(0,0,0)
+    cloud.rotation.y = Math.PI/2;
+    cloud.rotation.z = Math.random()*360;
+    cloud.scale.set(0.5,0.5,0.5)
+
+    cloud.material.opacity = 0.6;
+
+
+    scene.add(cloud);
+
+
+
+  }
+  })
+//FlashLIGHT
+//sound
+const listener_orage = new THREE.AudioListener();
+scene.add( listener_orage );
+
+// create a global audio source
+const sound_orage_1 = new THREE.Audio( listener );
+const sound_orage_2 = new THREE.Audio( listener );
+const sound_orage_3 = new THREE.Audio( listener );
+
+
+audioLoader.load( 'assets/orage_1.mp3', function( buffer_orage ) {
+	sound_orage_1.setBuffer( buffer_orage );
+	sound_orage_1.setVolume( 0.5 );
+});
+audioLoader.load( 'assets/orage_2.mp3', function( buffer_orage ) {
+	sound_orage_2.setBuffer( buffer_orage );
+	sound_orage_2.setVolume( 0.5 );
+});
+audioLoader.load( 'assets/orage_3.mp3', function( buffer_orage ) {
+	sound_orage_3.setBuffer( buffer_orage );
+	sound_orage_3.setVolume( 0.5 );
+});
+
+var orage_sound_tab=[sound_orage_1,sound_orage_2,sound_orage_3]
+
+var flash=new THREE.PointLight( 0x9BC4E2, 0,0, 1.7);
+flash.position.set(-100,100,0)
+scene.add(flash)
+
+
+//MOON
+
+var geometry_moon   = new THREE.SphereGeometry(20, 32, 32)
+var material_moon = new THREE.MeshBasicMaterial( {color: 0xffffff} );
+var moon = new THREE.Mesh(geometry_moon, material_moon)
+scene.add(moon)
+moon.position.set(-200,50,0)
+
+ // star
+ var stars=[];
+ addSphere()
+  //LIGHT
+  //cursorlight
+
+  const cursorlight = new THREE.PointLight( 0xff0000, 1, 1 );
+    cursorlight.position.set( 0, -0.49, 0 );
+    scene.add( cursorlight );
+
+
+    const ambiantLight=new THREE.AmbientLight( 0x5c64f2, 0.3);
+    ambiantLight.castShadow=true
+    scene.add(ambiantLight);
+
+  const light = new THREE.PointLight( 0xf5ebb5, 1, 15 );
+  light.position.set( 4, 4, 0 );
+  scene.add( light );
+
+    const miror_light = new THREE.PointLight( 0xf5ebb5, 1, 3 );
+    miror_light.position.set( 0, 3, -4.5 );
+    scene.add( miror_light );
+
+
+
+
+  const directionalLight = new THREE.DirectionalLight( 0x5c64f2, 1 );
+  scene.add( directionalLight );
+  scene.add( directionalLight.target );
+  directionalLight.castShadow=true
+
+  directionalLight.position.set(-20,10,0)
+  directionalLight.lookAt(new THREE.Vector3(0,0,0))
+
+
+const rectLight = new THREE.RectAreaLight( 0x1533f0, 2,  3, 1.5 );
+rectLight.position.set(-3.8,1.4,-2);
+rectLight.lookAt( -4, 1.2, -2 );
+scene.add( rectLight )
+
+
+
+
+
+
+
+
+
+
+
+
+  const allMeshesInGLTF = new Set();
+
+  var model_boy=new THREE.Group();
+  var anims=[];
+
+    gtlfLoader.load("assets/perso_compile.gltf", (gtlfscene) => {
+      gtlfscene.scene.traverse(node => {
+        if (node.isMesh) {
+          allMeshesInGLTF.add(node);
+        }
+      });
+
+
+
+
+      head_mesh=gtlfscene.scene
+      head_mesh.castShadow=true
+      head_parent = gtlfscene;
+
+
+      scene.add(head_mesh)
+      head_mesh.scale.set(1.7,1.7,1.7)
+      head_mesh.position.y=-0.8
+
+      model_boy=gtlfscene
+      mixer=new THREE.AnimationMixer(head_mesh)
+      anims=gtlfscene.animations;
+      const anim=THREE.AnimationClip.findByName(anims, 'walking')
+
+      action=mixer.clipAction(anim)
+    });
+
+
+var curve_points;
+var curve =generatecurv()
+
+
+function generatecurv(x,y,z){
+
+const curve= new THREE.CubicBezierCurve3(
+
+        new THREE.Vector3(6,2.5,0),
+        new THREE.Vector3(5,2.3,0),
+        new THREE.Vector3(0,2,0,0),
+        new THREE.Vector3(x,y,z)
+
+      )
+
+        curve_points = curve.getPoints( 50 );
+      return curve
+};
+
+
+
+
+
+
+
+    const geometry_curve = new THREE.BufferGeometry().setFromPoints( curve_points );
+
+    const material_curve = new THREE.LineBasicMaterial( { color: 0xff0000 } );
+
+    // Create the final object to add to the scene
+    const curveObject = new THREE.Line( geometry_curve, material_curve )
+
+
+
+
+
+
+
+// ROOM MESH
+  //window
+
+
+
+        const texture = new THREE.TextureLoader().load( 'assets/wood/Wood_022_basecolor.jpg' );
+        const texture_rougnedd = new THREE.TextureLoader().load( 'assets/wood/Wood_022_roughness.jpg' );
+        const texture_normal = new THREE.TextureLoader().load( 'assets/wood/Wood_022_normal.jpg' );
+
+
+
+
+        const texture_brick = new THREE.TextureLoader().load( 'assets/Concrete/Concrete_017_basecolor.jpg' );
+        const roughness = new THREE.TextureLoader().load( 'assets/Concrete/Concrete_017_roughness.jpg' );
+        const normal= new THREE.TextureLoader().load( 'assets/Concrete/Concrete_017_normal.jpg' );
+
+
+      const plafond_cube_geometry = new THREE.BoxGeometry( 10, 0.5, 11.5 );
+      const plafond_cube_material = new THREE.MeshStandardMaterial( {color: 0xf8faca,map:texture_brick,roughnessMap:roughness,normalMap:normal});
+      const plafond_cube_mesh = new THREE.Mesh( plafond_cube_geometry, plafond_cube_material );
+      scene.add( plafond_cube_mesh );
+      plafond_cube_mesh.position.y+=5.25
+      plafond_cube_mesh.castShadow=true
+
+
+
+  const ground_cube_geometry = new THREE.BoxGeometry( 10, 0.5, 10.5 );
+  const ground_cube_material = new THREE.MeshPhongMaterial( { map: texture,roughnessMap:texture_rougnedd,normalMap:texture_normal } );
+  const ground_cube_mesh = new THREE.Mesh( ground_cube_geometry, ground_cube_material );
+  scene.add( ground_cube_mesh );
+  ground_cube_mesh.position.y-=1
+  ground_cube_mesh.castShadow=true
+
+  const wallleft_cube_geometry = new THREE.BoxGeometry( 10, 10, 0.5 );
+  const wallleft_cube_material = new THREE.MeshStandardMaterial( {color: 0xE1D482} );
+  const wallleft_cube_mesh = new THREE.Mesh( wallleft_cube_geometry, wallleft_cube_material );
+  scene.add( wallleft_cube_mesh );
+  wallleft_cube_mesh.position.z-=5.5
+  wallleft_cube_mesh.castShadow=true
+
+
+  const wallright_cube_geometry = new THREE.BoxGeometry( 10, 10, 0.5 );
+  const wallright_cube_material = new THREE.MeshStandardMaterial( {color: 0xE1D482} );
+
+  const wallrightt_cube_mesh = new THREE.Mesh( wallright_cube_geometry, wallright_cube_material );
+  scene.add( wallrightt_cube_mesh );
+  wallrightt_cube_mesh.position.z+=5.5
+
+
+
+  const backwall_cube_geometry = new THREE.BoxGeometry( 0.5, 1.8, 11.5 );
+  const backwall_cube_material = new THREE.MeshStandardMaterial( {color: 0xE1D382} );
+  const backwall_cube_mesh = new THREE.Mesh( backwall_cube_geometry, backwall_cube_material );
+  scene.add( backwall_cube_mesh );
+  backwall_cube_mesh.position.x-=5
+  backwall_cube_mesh.castShadow=true
+
+
+
+
+  function getRandomInt(max) {
+    return (Math.random() * max);
+  }
+
+
+
+  var mouseDown = false;
+  var rightmousedown
+
+  document.body.onmousedown = function() {
+    sound.play()
+    mouseDown=true;
+    raycaster.setFromCamera(mouse,camera)
+    const intersec=raycaster.intersectObject(cube);
+      if (intersec.length>0){
+        state='selected'
+        action.stop()
+
+        controls.enableRotate=false;
+      }else{
+        const intersec_test=raycaster.intersectObjects(ground_cube_mesh);
+        if (intersec_test.length>0){
+          for (let i=0; i<intersec_test.length;i++){
+
+
+
+        if (intersec_test[i].object==ground_cube_mesh){
+          target.x=intersec_test[i].point.x
+          target.z=intersec_test[i].point.z
+        }}
+        target.y=head_mesh.position.y
+        if (state!='walking'){
+                state='walking'
+                action.stop()
+              }
+
+
+                head_mesh.lookAt(target)
+                cube.lookAt(target)}
+
+      }
+}
+
+
+  document.body.onmouseup = function() {
+    raycaster.setFromCamera(mouse,camera)
+    const intersec_test=raycaster.intersectObjects(scene.children);
+    if (intersec_test.length>0){
+    for (let i=0; i<intersec_test.length;i++){
+
+
+    if (intersec_test[i].object==ground_cube_mesh){
+      target.x=intersec_test[i].point.x
+      target.z=intersec_test[i].point.z
+        }
+      }}
+    mouseDown=false;
+    if (state=='selected'){
+      state='landing'
+      action.stop()
+    }
+    else{
+    if (state!='walking'){
+    state='walking'
+    action.stop()
+  }
+}
+    controls.enableRotate=true;
+
+
+  }
+
+
+
+ var mouse=new THREE.Vector2();
+var raycaster=new THREE.Raycaster();
+
+function reset_boy(){
+  for (let i=0; i<scene.children.length;i++){
+
+
+
+
+}}
+
+var state="loading"
+
+function hover_boy(){
+  raycaster.setFromCamera(mouse,camera)
+
+  const intersec=raycaster.intersectObjects(scene.children);
+  if (intersec.length>0){
+    for (let i=0; i<intersec.length;i++){
+
+
+    if (state=="selected"){
+    if (intersec[i].object==ground_cube_mesh){
+
+    head_mesh.position.x=(intersec[i].point.x)
+    head_mesh.position.z=(intersec[i].point.z)
+    target.x=(intersec[i].point.x)
+    target.z=(intersec[i].point.z)
+
+    cube.position.x=(intersec[i].point.x)
+    cube.position.z=(intersec[i].point.z)
+    }
+  }
+
+}
+
+
+    }
+  }
+var target=new THREE.Vector3();
+target.x=4
+target.y=-0.8
+target.z=4
+
+
+function onMouseMove( event ) {
+
+	// calculate pointer position in normalized device coordinates
+	// (-1 to +1) for both components
+
+	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+}
+
+
+
+window.addEventListener('mousemove', onMouseMove,false);
+
+
+var b=0
+var c=0
+const clock= new THREE.Clock()
+
+function animate() {
+stats.begin()
+requestAnimationFrame( animate );
+
+cursorlight.position.x=target.x
+cursorlight.position.z=target.z
+
+
+
+//RAINING
+const position=rain.geometry.attributes.position.array;
+for (let i=0;i<(raincount*3);i+=3){
+  position[i+1] -= 1.0 + Math.random()*0.1;
+  if (position[i+1] <8 &&(position[i]<5 && position[i]> -5)&&(position[i+2]<5 && position[i+2]> -5)){
+    position[i+1]=20;
+  }
+  if (position[i+1] <(-10* Math.random()*5)){
+    position[i+1]=20;
+  }
+  rain.geometry.attributes.position.needsUpdate=true;
+}
+
+
+//flash anims
+if (Math.random()>0.994){
+  if (flash.power<100){
+    for (var i=0;i<3;i++){
+      if (state!='loading'){
+      if (orage_sound_tab[i].isPlaying==false){
+        orage_sound_tab[i].play()
+        break;}}}
+
+  flash.position.set(
+    Math.random()*500 -250,
+    Math.random()*500,
+    -100
+  )}
+  flash.power=20+Math.random()*10;
+}
+else{
+  flash.power-=5
+  if (flash.power<0){
+      flash.power=0
+  }
+}
+
+
+
+    head_mesh.position.y=-0.8
+    if (anims.length>0){
+
+    if (state=='walking'){
+        const anim=THREE.AnimationClip.findByName(anims, 'walking')
+        action=mixer.clipAction(anim)
+        action.play()
+      }
+
+    if (state=='selected'){
+      const anim=THREE.AnimationClip.findByName(anims, 'falling')
+      action=mixer.clipAction(anim)
+      action.play()
+    }
+    if (state=='siting'){
+      const anim=THREE.AnimationClip.findByName(anims, 'siting')
+      action=mixer.clipAction(anim)
+      action.setLoop(THREE.LoopOnce)
+      action.clampWhenFinished = true;
+      action.play()
+    }
+    if (state=='miror'||state=='idle'){
+      const anim=THREE.AnimationClip.findByName(anims, 'IDLE')
+      action=mixer.clipAction(anim)
+      action.play()
+    }
+
+      if (state=='landing'){
+          const anim=THREE.AnimationClip.findByName(anims, 'landing')
+          action=mixer.clipAction(anim)
+          action.setLoop(THREE.LoopOnce)
+          action.play()
+
+
+          }
+        }
+        if (head_mesh.position.distanceTo(mirrorBack1.position)<2.5 && (state=='walking'||state=='idle')){
+          if (b==0){
+
+
+
+            curve= generatecurv(1,1.3,-5.2)
+            target.x=1
+            target.z=-4
+            controls.target.x=target.x
+            controls.target.y=1
+            controls.target.z=target.z
+
+          }
+          if (b<0.8){
+
+            b+=0.01
+            const pose=curve.getPoint(b)
+            camera.position.set(pose.x,pose.y,pose.z)
+            controls.object.lookAt(target.x,1,target.z)
+
+          }
+        }else{
+          b=0
+        }
+
+        if ((head_mesh.position.distanceTo(pc_mesh.position)<2.5 && state=='walking') ||(state=='siting')){
+          if (c==0){
+
+            state='siting'
+            action.stop()
+
+
+            curve= generatecurv(-7,1.5,-4)
+            target.x=-3.1
+            target.z=-2
+            controls.target.x=-7
+            controls.target.y=1
+            controls.target.z=-2
+
+          }
+          if (c<0.8){
+
+            c+=0.01
+            const pose=curve.getPoint(c)
+            camera.position.set(pose.x,pose.y,pose.z)
+            controls.object.lookAt(-7,1,-2)
+
+          }
+        }else{
+          c=0
+        }
+
+
+    if (head_mesh.position.distanceTo(target)>0.05){
+
+
+      head_mesh.lookAt(target)
+      cube.lookAt(target)
+      head_mesh.translateZ(0.06);
+      cube.translateZ(0.06);
+    }else{
+      if (state=='walking'){
+        state='idle'
+
+        action.stop()
+
+      }
+    }
+    hover_boy()
+    mixer.update(clock.getDelta())
+
+    renderer.render( scene, camera );
+    stats.end()
+}
+  animate();
+
+
+
+
+
+
+
+
+
+
+
+
+
+    var test= document.getElementById('lightswitch')
+
+    test.addEventListener('mousedown',function (e){
+      if (light.intensity==0){
+        light.intensity=1
+      }else{
+        light.intensity=0}
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+  var test= document.getElementById('resetcam')
+
+  test.addEventListener('mousedown',function (e){
+
+    controls.object.position.x = 7;
+    controls.object.position.y = 2;
+    controls.object.position.z = 0;
+    controls.target.x=0
+    controls.target.y=0
+    controls.target.z=0
+    controls.update()
+
+
+
+
+});
+
+
+
+
+
+   function fontloaderfunction () {
+
+  	class FontLoader extends THREE.Loader {
+
+  		constructor( manager ) {
+
+  			super( manager );
+
+  		}
+  		load( url, onLoad, onProgress, onError ) {
+
+  			const scope = this;
+  			const loader = new THREE.FileLoader( this.manager );
+  			loader.setPath( this.path );
+  			loader.setRequestHeader( this.requestHeader );
+  			loader.setWithCredentials( this.withCredentials );
+  			loader.load( url, function ( text ) {
+
+  				const font = scope.parse( JSON.parse( text ) );
+  				if ( onLoad ) onLoad( font );
+
+  			}, onProgress, onError );
+
+  		}
+  		parse( json ) {
+
+  			return new Font( json );
+
+  		}
+
+  	}
+
+  	//
+
+  	class Font {
+
+  		constructor( data ) {
+
+  			this.isFont = true;
+  			this.type = 'Font';
+  			this.data = data;
+
+  		}
+  		generateShapes( text, size = 100 ) {
+
+  			const shapes = [];
+  			const paths = createPaths( text, size, this.data );
+  			for ( let p = 0, pl = paths.length; p < pl; p ++ ) {
+
+  				shapes.push( ...paths[ p ].toShapes() );
+
+  			}
+
+  			return shapes;
+
+  		}
+
+  	}
+  	function createPaths( text, size, data ) {
+
+  		const chars = Array.from( text );
+  		const scale = size / data.resolution;
+  		const line_height = ( data.boundingBox.yMax - data.boundingBox.yMin + data.underlineThickness ) * scale;
+  		const paths = [];
+  		let offsetX = 0,
+  			offsetY = 0;
+  		for ( let i = 0; i < chars.length; i ++ ) {
+
+  			const char = chars[ i ];
+  			if ( char === '\n' ) {
+
+  				offsetX = 0;
+  				offsetY -= line_height;
+
+  			} else {
+
+  				const ret = createPath( char, scale, offsetX, offsetY, data );
+  				offsetX += ret.offsetX;
+  				paths.push( ret.path );
+
+  			}
+
+  		}
+
+  		return paths;
+
+  	}
+
+  	function createPath( char, scale, offsetX, offsetY, data ) {
+
+  		const glyph = data.glyphs[ char ] || data.glyphs[ '?' ];
+  		if ( ! glyph ) {
+
+  			console.error( 'THREE.Font: character "' + char + '" does not exists in font family ' + data.familyName + '.' );
+  			return;
+
+  		}
+
+  		const path = new THREE.ShapePath();
+  		let x, y, cpx, cpy, cpx1, cpy1, cpx2, cpy2;
+  		if ( glyph.o ) {
+
+  			const outline = glyph._cachedOutline || ( glyph._cachedOutline = glyph.o.split( ' ' ) );
+  			for ( let i = 0, l = outline.length; i < l; ) {
+
+  				const action = outline[ i ++ ];
+  				switch ( action ) {
+
+  					case 'm':
+  						// moveTo
+
+  						x = outline[ i ++ ] * scale + offsetX;
+  						y = outline[ i ++ ] * scale + offsetY;
+  						path.moveTo( x, y );
+  						break;
+  					case 'l':
+  						// lineTo
+
+  						x = outline[ i ++ ] * scale + offsetX;
+  						y = outline[ i ++ ] * scale + offsetY;
+  						path.lineTo( x, y );
+  						break;
+  					case 'q':
+  						// quadraticCurveTo
+
+  						cpx = outline[ i ++ ] * scale + offsetX;
+  						cpy = outline[ i ++ ] * scale + offsetY;
+  						cpx1 = outline[ i ++ ] * scale + offsetX;
+  						cpy1 = outline[ i ++ ] * scale + offsetY;
+  						path.quadraticCurveTo( cpx1, cpy1, cpx, cpy );
+  						break;
+  					case 'b':
+  						// bezierCurveTo
+
+  						cpx = outline[ i ++ ] * scale + offsetX;
+  						cpy = outline[ i ++ ] * scale + offsetY;
+  						cpx1 = outline[ i ++ ] * scale + offsetX;
+  						cpy1 = outline[ i ++ ] * scale + offsetY;
+  						cpx2 = outline[ i ++ ] * scale + offsetX;
+  						cpy2 = outline[ i ++ ] * scale + offsetY;
+  						path.bezierCurveTo( cpx1, cpy1, cpx2, cpy2, cpx, cpy );
+  						break;
+
+  				}
+
+  			}
+
+  		}
+
+  		return {
+  			offsetX: glyph.ha * scale,
+  			path: path
+  		};
+
+  	}
+
+  	THREE.Font = Font;
+  	THREE.FontLoader = FontLoader;
+
+  };
+
+
+	function addSphere(){
+
+				// The loop will move from z position of -1000 to z position 1000, adding a random particle at each position.
+				for ( var z= -1000; z < 2000; z+=20 ) {
+
+					// Make a sphere (exactly the same as before).
+					var geometry   = new THREE.SphereGeometry(1, 32, 32)
+					var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
+					var sphere = new THREE.Mesh(geometry, material)
+
+					// This time we give the sphere random x and y positions between -500 and 500
+					sphere.position.x = Math.random() * 1000 - 1500;
+					sphere.position.y = Math.random() * 1000 - 500;
+
+
+
+					// Then set the z position to where it is in the loop (distance of camera)
+					sphere.position.z = z;
+
+					// scale it up a bit
+					sphere.scale.x = sphere.scale.y = 2;
+
+					//add the sphere to the scene
+					scene.add( sphere );
+
+					//finally push it to the stars array
+					stars.push(sphere);
+				}
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+  </script>
+
+
+</body>
+</html>

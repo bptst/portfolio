@@ -1,0 +1,11 @@
+Model Information:
+* title:	desk and pc
+* source:	https://sketchfab.com/3d-models/desk-and-pc-76f7abaa49014cc8a9e2aab39cabf628
+* author:	linus1178 (https://sketchfab.com/linus1178)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "desk and pc" (https://sketchfab.com/3d-models/desk-and-pc-76f7abaa49014cc8a9e2aab39cabf628) by linus1178 (https://sketchfab.com/linus1178) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

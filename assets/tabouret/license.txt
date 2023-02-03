@@ -1,0 +1,11 @@
+Model Information:
+* title:	tabouret
+* source:	https://sketchfab.com/3d-models/tabouret-f0432ec5edef4161b27254c71d6e87d6
+* author:	bruyere (https://sketchfab.com/guurme)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "tabouret" (https://sketchfab.com/3d-models/tabouret-f0432ec5edef4161b27254c71d6e87d6) by bruyere (https://sketchfab.com/guurme) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
